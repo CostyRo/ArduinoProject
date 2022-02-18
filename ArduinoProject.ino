@@ -1,10 +1,12 @@
+#include <MQ2.h>
 #include <DHT.h>
 #include <Keypad.h>
 #include <LiquidCrystal.h>
 // introduce the libraries for hardware interaction
 
-#define HUM_TEMP_SENZOR_PIN 7
 #define LCD_PINS 12,11,5,4,3,2
+#define GAS_SENZOR_PIN 13
+#define HUM_TEMP_SENZOR_PIN 7
 #define KEYPAD_ROW_PINS (byte[]){19,18,17,16}
 #define KEYPAD_COLUMN_PINS (byte[]){15,14,8,9}
 #define LCD_CONTRAST_PIN 6
@@ -21,10 +23,14 @@
 #define HUM String(temp_hum_senzor.readHumidity())+String('%')
 #define TEMP String(temp_hum_senzor.readTemperature())
 #define TEMP_SIGN String((char)223)+String('C')
+#define LPG String((int)gas_senzor.readLPG())
+#define CO String((int)gas_senzor.readCO())
+#define SMOKE String((int)gas_senzor.readSmoke())
 #define END_ELEM_EQUATION(i) equation[strlen(equation)-i]
 // macros for utilities
 // a macro for printing the humidity and one for temperature
 // a macro for printing the the temeperature notation
+// a macro for printing the LPG, and one for CO and one for smoke
 // and a macro for returning the last i elemenet of the equation
 
 bool previous_button_phase=false;
@@ -50,6 +56,7 @@ struct{
 // used for storing the numbers of the equation
 
 LiquidCrystal lcd(LCD_PINS);
+MQ2 gas_senzor(GAS_SENZOR_PIN);
 DHT temp_hum_senzor(HUM_TEMP_SENZOR_PIN,HUM_TEMP_SENZOR_TYPE);
 Keypad matrix_keypad(makeKeymap(((char[][4]){"123+","456-","789*",".0=%"})),
                     KEYPAD_ROW_PINS,KEYPAD_COLUMN_PINS,KEYPAD_TYPE);
@@ -60,7 +67,7 @@ void setup(){
   prepare_screen();
   // prepare the lcd screen
 
-  prepare_senzor();
+  prepare_senzors();
   // prepare the humidity and temperature senzor
 }
 
@@ -82,9 +89,12 @@ void prepare_screen(){
 }
 
 // function that prepares the humidity and temperature senzor
-void prepare_senzor(){
+void prepare_senzors(){
   temp_hum_senzor.begin();
   // start the humidity and temperature senzor
+
+  gas_senzor.begin();
+  // start the gas senzor
 
   pinMode(BUTTON_PIN,INPUT);
   // set the input to button's pin
@@ -127,7 +137,7 @@ void track_button(){
 // function that changes and starts the activity of the button
 void set_activity(){
   if(!default_activity || calculator_on) print_hum_temp();
-  else gas_senzor();
+  else print_gas_info();
   // execute the opposite of the current activity
 
   switch_activity();
@@ -157,10 +167,22 @@ void reset(){
   // set the memory of equation, operators and numbers to 0
 }
 
-void gas_senzor(){
+// function that prints the LPG, the CO and the smoke
+void print_gas_info(){
   lcd.clear();
+  // clear the screen
+
   lcd.home();
-  lcd.print("TODO");
+  // set the cursor to the start of the lcd scren
+
+  lcd.print(String("LPG: ")+LPG+String(" CO: ")+CO);
+  // print the LPG and the CO
+
+  lcd.setCursor(LCD_NEXT_ROW);
+  // set the cursor to the next row
+
+  lcd.print(String("SMOKE: ")+SMOKE+String(" PPM"));
+  // print the smoke
 }
 
 // function that actions the calculator
@@ -338,4 +360,4 @@ void recalculate_index_lenght(byte &index,byte &operators_lenght){
   index--;
   operators_lenght--;
   // decrement the index and the lenght by one
-}
+} 
