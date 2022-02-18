@@ -2,7 +2,7 @@
 
 I started to make this project because i wanted to see if i like the hardware part and if embedded development is for me.
 
-This project was made to practice my skills learnt on Arduino, firstly the project have 3 states:
+This project was made to practice my skills learned on Arduino, firstly the project has 3 states:
 
 1. Info about temperature and humidity
 2. Calculator app
